@@ -66,14 +66,31 @@ computador executa os cálculos e a análise.
 
 ## 4. Hardware utilizado
 
--   Arduino Uno
--   Multi Function Shield para Arduino
--   Sensor de temperatura DS18B20
--   Cabo USB com suporte à transmissão de dados
--   Computador para aquisição e processamento
+O experimento utiliza os seguintes componentes:
 
-O DS18B20 está conectado ao Multi Function Shield, utilizando a entrada
-correspondente ao pino analógico **A4** do Arduino Uno.
+- Arduino Uno
+- Multi Function Shield para Arduino
+- Sensor de temperatura DS18B20
+- Cabo USB com transmissão de dados
+- Computador para aquisição e processamento
+
+### Arduino Uno
+
+<p align="center">
+  <img src="docs/images/arduino-uno.jpg"
+       alt="Arduino Uno utilizado no experimento"
+       width="450">
+</p>
+
+### Multi Function Shield
+
+<p align="center">
+  <img src="docs/images/multifunction-shield.jpg"
+       alt="Multi Function Shield utilizado no experimento"
+       width="450">
+</p>
+
+O sensor DS18B20 é conectado ao Multi Function Shield utilizando a entrada correspondente ao pino **A4** do Arduino Uno.
 
 ------------------------------------------------------------------------
 
