@@ -77,7 +77,7 @@ O experimento utiliza os seguintes componentes:
 ### Arduino Uno
 
 <p align="center">
-  <img src="docs/images/arduino-uno.jpg"
+  <img src="docs/images/arduino_uno.jpg"
        alt="Arduino Uno utilizado no experimento"
        width="450">
 </p>
@@ -85,7 +85,7 @@ O experimento utiliza os seguintes componentes:
 ### Multi Function Shield
 
 <p align="center">
-  <img src="docs/images/multifunction-shield.jpg"
+  <img src="docs/images/arduino-multifunction-shield-pinout.jpg"
        alt="Multi Function Shield utilizado no experimento"
        width="450">
 </p>
