@@ -286,24 +286,44 @@ Isso permite acompanhar a duração total de cada sessão de monitoramento.
 
 ------------------------------------------------------------------------
 
-## 15. Informações apresentadas
+## 15. Monitoramento e informações apresentadas
 
-Durante a execução, o sistema pode apresentar:
+Durante a execução do experimento, a aplicação Python apresenta em tempo real a evolução da temperatura e os indicadores calculados a partir das medições recebidas do Arduino.
 
-``` text
-Temperatura atual
-Média móvel de 30 minutos
-Média total
-Temperatura máxima
-Horário da máxima
-Temperatura mínima
-Horário da mínima
-Amplitude térmica
-Tendência em °C/min
-Estado da tendência
-Tempo de aquisição
-```
+O gráfico mantém uma janela móvel correspondente aos **últimos 60 minutos de aquisição**, permitindo acompanhar tanto as variações instantâneas quanto o comportamento térmico ao longo do tempo.
 
+São apresentadas duas curvas:
+
+- **Temperatura instantânea** — representa diretamente as medições recebidas do sensor DS18B20;
+- **Média móvel de 30 minutos** — suaviza as oscilações das medições e permite visualizar com maior clareza a tendência térmica.
+
+Além das curvas, o sistema apresenta os seguintes indicadores:
+
+- temperatura atual;
+- média móvel dos últimos 30 minutos;
+- média total desde o início do experimento;
+- temperatura máxima e horário de ocorrência;
+- temperatura mínima e horário de ocorrência;
+- amplitude térmica;
+- tendência térmica em °C/min;
+- classificação da tendência como **Subindo**, **Caindo** ou **Estável**;
+- tempo total de aquisição.
+
+### Visualização do experimento
+
+A figura a seguir apresenta uma captura do sistema durante uma sessão real de aquisição e processamento dos dados.
+
+<p align="center">
+  <img src="docs/images/monitoramento-temperatura.png"
+       alt="Monitoramento de temperatura em tempo real utilizando Arduino Uno e Python"
+       width="850">
+</p>
+
+<p align="center">
+  <em>Figura 1 — Monitoramento da temperatura em tempo real, apresentando a temperatura instantânea, a média móvel de 30 minutos e os indicadores calculados durante o experimento.</em>
+</p>
+
+A visualização permite observar simultaneamente o **dado bruto adquirido pelo sensor** e as **informações derivadas pelo processamento realizado em Python**. Essa distinção será particularmente importante nas etapas posteriores do projeto, quando parte desse processamento será transferida do computador para o dispositivo de borda.
 ------------------------------------------------------------------------
 
 ## 16. Registro dos dados
