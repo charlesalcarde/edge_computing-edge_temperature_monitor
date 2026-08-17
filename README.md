@@ -1,5 +1,70 @@
 # Monitoramento de Temperatura — Experimento de Computação de Borda
 
+## Sumário
+
+- [1. Visão geral](#1-visao-geral)
+- [2. Objetivos](#2-objetivos)
+- [3. Arquitetura inicial](#3-arquitetura-inicial)
+- [4. Hardware utilizado](#4-hardware-utilizado)
+  - [Arduino Uno](#arduino-uno)
+  - [Multi Function Shield](#multi-function-shield)
+- [5. Software utilizado](#5-software-utilizado)
+  - [Arduino](#arduino)
+  - [Python](#python)
+- [6. Aquisição da temperatura](#6-aquisicao-da-temperatura)
+- [7. Monitoramento em Python](#7-monitoramento-em-python)
+- [8. Média móvel de 30 minutos](#8-media-movel-de-30-minutos)
+- [9. Média total](#9-media-total)
+- [10. Máxima, mínima e amplitude térmica](#10-maxima-minima-e-amplitude-termica)
+- [11. Tendência térmica](#11-tendencia-termica)
+- [12. Visualização da Parte 1](#12-visualizacao-da-parte-1)
+- [13. Migração do processamento para o Arduino](#13-migracao-do-processamento-para-o-arduino)
+- [14. Limitações de memória e estratégia de agregação](#14-limitacoes-de-memoria-e-estrategia-de-agregacao)
+- [15. Média móvel de 30 minutos na borda](#15-media-movel-de-30-minutos-na-borda)
+- [16. Média total, máxima, mínima e amplitude na borda](#16-media-total-maxima-minima-e-amplitude-na-borda)
+- [17. Tendência térmica de 5 minutos](#17-tendencia-termica-de-5-minutos)
+- [18. Detecção de eventos rápidos](#18-deteccao-de-eventos-rapidos)
+- [19. Estado térmico](#19-estado-termico)
+- [20. Limiar ajustável de eventos rápidos](#20-limiar-ajustavel-de-eventos-rapidos)
+- [21. Interface homem-máquina local](#21-interface-homem-maquina-local)
+  - [Botão S1 — seleção do display](#botao-s1-selecao-do-display)
+  - [LEDs indicadores](#leds-indicadores)
+  - [Botão S2 — ajuste do limiar](#botao-s2-ajuste-do-limiar)
+- [22. Alertas sonoros locais](#22-alertas-sonoros-locais)
+- [23. Telemetria produzida pela borda](#23-telemetria-produzida-pela-borda)
+- [24. Nova função da aplicação Python](#24-nova-funcao-da-aplicacao-python)
+- [25. Painel de supervisão](#25-painel-de-supervisao)
+  - [Visualização do sistema na segunda etapa](#visualizacao-do-sistema-na-segunda-etapa)
+- [26. Registro histórico dos eventos no gráfico](#26-registro-historico-dos-eventos-no-grafico)
+- [27. Persistência em arquivo CSV](#27-persistencia-em-arquivo-csv)
+  - [Dados registrados no arquivo CSV](#dados-registrados-no-arquivo-csv)
+- [28. Redução da latência entre Arduino e Python](#28-reducao-da-latencia-entre-arduino-e-python)
+- [29. Autonomia do nó de borda](#29-autonomia-do-no-de-borda)
+  - [Capacidades executadas localmente pelo nó de borda](#capacidades-executadas-localmente-pelo-no-de-borda)
+- [30. Comparação das duas arquiteturas](#30-comparacao-das-duas-arquiteturas)
+  - [Parte 1 — Processamento centralizado](#parte-1-processamento-centralizado)
+  - [Parte 2 — Processamento na borda](#parte-2-processamento-na-borda)
+  - [Mudança do papel do computador](#mudanca-do-papel-do-computador)
+  - [Processamento em diferentes escalas de tempo](#processamento-em-diferentes-escalas-de-tempo)
+  - [Autonomia local](#autonomia-local)
+  - [Resposta local a eventos](#resposta-local-a-eventos)
+  - [Interação local com o operador](#interacao-local-com-o-operador)
+  - [Botão S2 e modo de configuração](#botao-s2-e-modo-de-configuracao)
+  - [Ajuste de sensibilidade pelo trimpot](#ajuste-de-sensibilidade-pelo-trimpot)
+  - [Feedback visual e sonoro](#feedback-visual-e-sonoro)
+  - [Supervisão no computador](#supervisao-no-computador)
+  - [Persistência das informações](#persistencia-das-informacoes)
+  - [Sincronização entre a borda e o supervisório](#sincronizacao-entre-a-borda-e-o-supervisorio)
+  - [Comparação resumida](#comparacao-resumida)
+  - [Síntese da evolução](#sintese-da-evolucao)
+- [31. Parâmetros operacionais e reprodutibilidade](#31-parametros-operacionais-e-reprodutibilidade)
+  - [Sequência operacional resumida](#sequencia-operacional-resumida)
+- [32. Próximas etapas](#32-proximas-etapas)
+- [33. Objetivo acadêmico](#33-objetivo-academico)
+- [Autor](#autor)
+
+---
+<a id="1-visao-geral"></a>
 ## 1. Visão geral
 
 Este projeto apresenta um experimento de aquisição, processamento, visualização e supervisão de temperatura utilizando um **Arduino Uno**, um **Multi Function Shield**, um sensor digital de temperatura **DS18B20** e uma aplicação desenvolvida em **Python**.
@@ -13,6 +78,7 @@ Essa evolução permite comparar, em um mesmo experimento, uma arquitetura tradi
 
 ---
 
+<a id="2-objetivos"></a>
 ## 2. Objetivos
 
 O experimento tem como objetivos:
@@ -33,6 +99,7 @@ O experimento tem como objetivos:
 
 # Parte 1 — Processamento centralizado
 
+<a id="3-arquitetura-inicial"></a>
 ## 3. Arquitetura inicial
 
 Na primeira fase, o Arduino é responsável principalmente pela aquisição da temperatura. O processamento é realizado pelo computador.
@@ -56,6 +123,7 @@ Nesta arquitetura, o Arduino envia os dados de temperatura e o computador execut
 
 ---
 
+<a id="4-hardware-utilizado"></a>
 ## 4. Hardware utilizado
 
 O experimento utiliza:
@@ -66,6 +134,7 @@ O experimento utiliza:
 - cabo USB com transmissão de dados;
 - computador para aquisição, supervisão e armazenamento.
 
+<a id="arduino-uno"></a>
 ### Arduino Uno
 
 <p align="center">
@@ -74,6 +143,7 @@ O experimento utiliza:
        width="450">
 </p>
 
+<a id="multi-function-shield"></a>
 ### Multi Function Shield
 
 <p align="center">
@@ -86,8 +156,10 @@ O sensor DS18B20 é conectado ao Multi Function Shield utilizando a entrada corr
 
 ---
 
+<a id="5-software-utilizado"></a>
 ## 5. Software utilizado
 
+<a id="arduino"></a>
 ### Arduino
 
 - Arduino IDE;
@@ -96,6 +168,7 @@ O sensor DS18B20 é conectado ao Multi Function Shield utilizando a entrada corr
 - biblioteca `DallasTemperature`;
 - biblioteca `TimerOne`.
 
+<a id="python"></a>
 ### Python
 
 - Python;
@@ -111,6 +184,7 @@ python -m pip install pyserial matplotlib numpy
 
 ---
 
+<a id="6-aquisicao-da-temperatura"></a>
 ## 6. Aquisição da temperatura
 
 O Arduino realiza a leitura do sensor DS18B20 e transmite os valores pela porta serial.
@@ -129,6 +203,7 @@ As medições são atualizadas aproximadamente a cada:
 
 ---
 
+<a id="7-monitoramento-em-python"></a>
 ## 7. Monitoramento em Python
 
 Na Parte 1, a aplicação Python recebe os dados brutos do Arduino e realiza os cálculos necessários ao monitoramento.
@@ -148,6 +223,7 @@ São apresentados:
 
 ---
 
+<a id="8-media-movel-de-30-minutos"></a>
 ## 8. Média móvel de 30 minutos
 
 Na primeira implementação, a média móvel de 30 minutos é calculada no computador.
@@ -156,6 +232,7 @@ Durante os primeiros 30 minutos, são utilizadas todas as amostras disponíveis.
 
 ---
 
+<a id="9-media-total"></a>
 ## 9. Média total
 
 A média total considera todo o período desde o início da aquisição.
@@ -168,6 +245,7 @@ Média total = soma acumulada das temperaturas / número total de amostras
 
 ---
 
+<a id="10-maxima-minima-e-amplitude-termica"></a>
 ## 10. Máxima, mínima e amplitude térmica
 
 Durante a execução são registradas as temperaturas máxima e mínima do experimento.
@@ -180,6 +258,7 @@ Amplitude = Temperatura máxima - Temperatura mínima
 
 ---
 
+<a id="11-tendencia-termica"></a>
 ## 11. Tendência térmica
 
 Na arquitetura centralizada, o Python calcula a tendência de variação da temperatura utilizando uma janela de aproximadamente 5 minutos.
@@ -200,6 +279,7 @@ ESTAVEL
 
 ---
 
+<a id="12-visualizacao-da-parte-1"></a>
 ## 12. Visualização da Parte 1
 
 <p align="center">
@@ -216,6 +296,7 @@ ESTAVEL
 
 # Parte 2 — Processamento na borda
 
+<a id="13-migracao-do-processamento-para-o-arduino"></a>
 ## 13. Migração do processamento para o Arduino
 
 Na segunda fase, o Arduino deixa de atuar apenas como dispositivo de aquisição e passa a executar localmente os principais cálculos e decisões do sistema.
@@ -253,6 +334,7 @@ O computador passa a receber **informação já processada na borda**.
 
 ---
 
+<a id="14-limitacoes-de-memoria-e-estrategia-de-agregacao"></a>
 ## 14. Limitações de memória e estratégia de agregação
 
 O Arduino Uno possui apenas 2 kB de SRAM. Uma aquisição a cada segundo durante 30 minutos produziria:
@@ -288,6 +370,7 @@ Essa estratégia permite executar a média móvel diretamente no Arduino com bai
 
 ---
 
+<a id="15-media-movel-de-30-minutos-na-borda"></a>
 ## 15. Média móvel de 30 minutos na borda
 
 A média móvel de 30 minutos passou a ser calculada no Arduino.
@@ -303,6 +386,7 @@ O Python apenas recebe o valor de `MEDIA30` já calculado.
 
 ---
 
+<a id="16-media-total-maxima-minima-e-amplitude-na-borda"></a>
 ## 16. Média total, máxima, mínima e amplitude na borda
 
 O Arduino calcula continuamente:
@@ -318,6 +402,7 @@ A média total utiliza soma acumulada e contagem de amostras. Máxima e mínima 
 
 ---
 
+<a id="17-tendencia-termica-de-5-minutos"></a>
 ## 17. Tendência térmica de 5 minutos
 
 O Arduino calcula também uma tendência térmica de curto/médio prazo, expressa em:
@@ -350,6 +435,7 @@ Isso evita classificar prematuramente a tendência como estável.
 
 ---
 
+<a id="18-deteccao-de-eventos-rapidos"></a>
 ## 18. Detecção de eventos rápidos
 
 O Arduino avalia a diferença entre leituras consecutivas:
@@ -376,6 +462,7 @@ A decisão é executada diretamente no microcontrolador.
 
 ---
 
+<a id="19-estado-termico"></a>
 ## 19. Estado térmico
 
 Além do evento instantâneo, o sistema combina a ocorrência rápida com a tendência de 5 minutos para produzir uma interpretação de mais alto nível.
@@ -394,6 +481,7 @@ Isso permite distinguir, por exemplo, uma subida rápida pontual de uma tendênc
 
 ---
 
+<a id="20-limiar-ajustavel-de-eventos-rapidos"></a>
 ## 20. Limiar ajustável de eventos rápidos
 
 O limiar de detecção deixou de ser um valor fixo no código.
@@ -423,12 +511,30 @@ LIMIAR
 
 ---
 
+<a id="21-interface-homem-maquina-local"></a>
 ## 21. Interface homem-máquina local
 
 Uma evolução importante da Parte 2 foi a criação de uma **interface homem-máquina local** utilizando os recursos do próprio Multi Function Shield.
 
 O objetivo é permitir que o nó de borda seja observado e configurado mesmo sem depender do computador.
 
+A interface local foi organizada para separar claramente **navegação**, **configuração** e **sinalização**:
+
+| Elemento | Função local |
+|---|---|
+| **S1** | Navega entre as variáveis apresentadas no display. |
+| **S2** | Entra ou sai do modo de ajuste do limiar de evento rápido. |
+| **Display** | Mostra `TEMP`, `MEDIA30`, `TREND5` ou o valor do limiar durante a configuração. |
+| **LED 1** | Indica que o display apresenta temperatura instantânea. |
+| **LED 2** | Indica que o display apresenta a média móvel de 30 minutos. |
+| **LED 3** | Indica que o display apresenta a tendência de 5 minutos. |
+| **4 LEDs piscando** | Indicam que o sistema está no modo de configuração do limiar. |
+| **Trimpot** | Ajusta localmente a sensibilidade da detecção de eventos rápidos. |
+| **Buzzer** | Fornece resposta sonora imediata aos eventos detectados. |
+
+Esse conjunto permite que um operador consulte o estado do sistema, altere sua sensibilidade e receba alertas diretamente no nó de borda, mesmo na ausência do supervisório Python.
+
+<a id="botao-s1-selecao-do-display"></a>
 ### Botão S1 — seleção do display
 
 Um toque curto em S1 alterna ciclicamente entre:
@@ -439,6 +545,7 @@ TEMP -> MEDIA30 -> TREND5 -> TEMP ...
 
 O display de quatro dígitos apresenta o valor correspondente ao modo selecionado.
 
+<a id="leds-indicadores"></a>
 ### LEDs indicadores
 
 Os LEDs funcionam como legenda do display:
@@ -451,6 +558,7 @@ LED 3 -> tendência de 5 minutos
 
 Isso elimina a ambiguidade de interpretar um número isolado no display.
 
+<a id="botao-s2-ajuste-do-limiar"></a>
 ### Botão S2 — ajuste do limiar
 
 Um pressionamento longo de S2 entra ou sai do modo de configuração do limiar.
@@ -465,6 +573,7 @@ Ao sair, o display e os LEDs retornam ao modo anteriormente selecionado.
 
 ---
 
+<a id="22-alertas-sonoros-locais"></a>
 ## 22. Alertas sonoros locais
 
 O buzzer do Multi Function Shield passou a sinalizar eventos rápidos diretamente no hardware.
@@ -482,6 +591,7 @@ Esse comportamento reforça a autonomia do nó de borda: o dispositivo não apen
 
 ---
 
+<a id="23-telemetria-produzida-pela-borda"></a>
 ## 23. Telemetria produzida pela borda
 
 A comunicação serial passou a transportar uma mensagem estruturada contendo os resultados do processamento local.
@@ -508,6 +618,7 @@ O computador deixa de receber somente um dado bruto e passa a receber **informa�
 
 ---
 
+<a id="24-nova-funcao-da-aplicacao-python"></a>
 ## 24. Nova função da aplicação Python
 
 Na Parte 2, o Python assume principalmente o papel de supervisório.
@@ -524,6 +635,7 @@ Os principais cálculos deixaram de ser refeitos no computador.
 
 ---
 
+<a id="25-painel-de-supervisao"></a>
 ## 25. Painel de supervisão
 
 O painel gráfico apresenta:
@@ -547,6 +659,7 @@ O painel gráfico apresenta:
 
 A legenda e o painel lateral permitem separar claramente dados instantâneos, indicadores calculados e estados produzidos pelo sistema de borda.
 
+<a id="visualizacao-do-sistema-na-segunda-etapa"></a>
 ### Visualização do sistema na segunda etapa
 
 A figura a seguir apresenta o supervisório Python após a migração do
@@ -569,6 +682,7 @@ processamento para o Arduino.
 
 ---
 
+<a id="26-registro-historico-dos-eventos-no-grafico"></a>
 ## 26. Registro histórico dos eventos no gráfico
 
 Quando o Arduino detecta:
@@ -596,6 +710,7 @@ Assim, mesmo depois que o campo `EVENTO` retorna para `NORMAL`, a ocorrência co
 
 ---
 
+<a id="27-persistencia-em-arquivo-csv"></a>
 ## 27. Persistência em arquivo CSV
 
 A persistência de dados foi efetivamente implementada na Parte 2.
@@ -606,6 +721,7 @@ A cada sessão, o Python cria automaticamente um arquivo com nome semelhante a:
 edge_temperatura_20260817_075000.csv
 ```
 
+<a id="dados-registrados-no-arquivo-csv"></a>
 ### Dados registrados no arquivo CSV
 
 Cada linha do arquivo CSV corresponde a uma leitura recebida do Arduino
@@ -628,19 +744,22 @@ localmente pelo nó de borda.
 | **Variacao rapida** | Taxa de variação calculada a partir do `Delta` e do intervalo real entre as duas últimas leituras, expressa em °C/min. |
 | **Limiar evento** | Valor de sensibilidade utilizado pelo Arduino para decidir se uma alteração deve ser classificada como evento rápido. Esse valor é ajustável pelo trimpot do Multi Function Shield. |
 | **Evento** | Classificação da ocorrência instantânea: `NORMAL`, `SUBIDA_RAPIDA` ou `QUEDA_RAPIDA`. |
-| **Estado termico** | Estado térmico global determinado pelo Arduino combinando eventos rápidos e tendência: `SUBIDA_RAPIDA`, `QUEDA_RAPIDA`, `AQUECIMENTO`, `RESFRIAMENTO` ou `ESTAVEL`. |```
+| **Estado termico** | Estado térmico global determinado pelo Arduino combinando eventos rápidos e tendência: `SUBIDA_RAPIDA`, `QUEDA_RAPIDA`, `AQUECIMENTO`, `RESFRIAMENTO` ou `ESTAVEL`. |
 
 O registro do limiar é especialmente útil porque permite saber qual sensibilidade estava configurada no instante em que determinado evento ocorreu.
 
 A presença desses campos no arquivo CSV permite reconstruir não apenas
 a evolução da temperatura, mas também as decisões tomadas pelo
-dispositivo de borda ao longo do experimento. Por exemplo, é possível
+dispositivo de borda ao longo do experimento.
+
+> **Observação:** os campos `Data` e `Hora` correspondem ao instante em que a leitura é recebida e registrada pelo computador. Eles não são, nesta fase, timestamps gerados pelo próprio Arduino. Por exemplo, é possível
 identificar qual era o limiar de sensibilidade configurado no instante
 em que determinado evento rápido foi detectado, bem como o estado
 térmico e a tendência calculados naquele momento.
 
 ---
 
+<a id="28-reducao-da-latencia-entre-arduino-e-python"></a>
 ## 28. Redução da latência entre Arduino e Python
 
 Durante os testes foi observado um atraso progressivo entre a ocorrência de um evento no Arduino e sua representação no gráfico.
@@ -665,10 +784,12 @@ Após a alteração, o gráfico passou a responder praticamente em sincronismo c
 
 ---
 
+<a id="29-autonomia-do-no-de-borda"></a>
 ## 29. Autonomia do nó de borda
 
 A Parte 2 demonstra que o Arduino é capaz de operar como um pequeno nó de Edge Computing.
 
+<a id="capacidades-executadas-localmente-pelo-no-de-borda"></a>
 ### Capacidades executadas localmente pelo nó de borda
 
 O Arduino Uno passou a executar localmente diversas funções que, na
@@ -688,12 +809,14 @@ capacidades implementadas são apresentadas a seguir.
 | **Interação com o operador** | Permite o controle local do sistema por meio dos botões, LEDs, display e trimpot, possibilitando alternar informações exibidas e configurar parâmetros sem depender do computador. |
 
 O computador deixa de participar diretamente da tomada de decisão e passa a atuar como supervisório e repositório dos dados.
+
 A implementação dessas funções demonstra a evolução do Arduino de um
 simples dispositivo de aquisição para um nó de borda com capacidade de
 processamento, decisão e interação local. O sistema pode interpretar os
 dados do sensor, identificar situações relevantes e fornecer respostas
 visuais e sonoras mesmo sem a participação direta do computador.
 
+<a id="30-comparacao-das-duas-arquiteturas"></a>
 ## 30. Comparação das duas arquiteturas
 
 O experimento foi desenvolvido em duas etapas principais, permitindo
@@ -705,6 +828,7 @@ Embora o hardware de aquisição permaneça essencialmente o mesmo, a
 principal diferença entre as duas etapas está no local em que os dados
 são processados e transformados em informação.
 
+<a id="parte-1-processamento-centralizado"></a>
 ### Parte 1 — Processamento centralizado
 
 Na primeira etapa do experimento, o Arduino Uno desempenhava
@@ -807,6 +931,7 @@ VISUALIZAR
 
 ---
 
+<a id="parte-2-processamento-na-borda"></a>
 ### Parte 2 — Processamento na borda
 
 Na segunda etapa, a arquitetura foi modificada de forma significativa.
@@ -906,6 +1031,7 @@ borda: aproximar o processamento da origem dos dados.
 
 ---
 
+<a id="mudanca-do-papel-do-computador"></a>
 ### Mudança do papel do computador
 
 Outra consequência importante da segunda arquitetura é a mudança do
@@ -944,6 +1070,7 @@ a manter o histórico de funcionamento do sistema.
 
 ---
 
+<a id="processamento-em-diferentes-escalas-de-tempo"></a>
 ### Processamento em diferentes escalas de tempo
 
 A segunda arquitetura também passou a trabalhar com diferentes escalas
@@ -994,6 +1121,7 @@ quanto comportamentos térmicos mais lentos.
 
 ---
 
+<a id="autonomia-local"></a>
 ### Autonomia local
 
 Uma consequência especialmente importante da migração do processamento
@@ -1053,6 +1181,7 @@ funções básicas de análise e operação.
 
 ---
 
+<a id="resposta-local-a-eventos"></a>
 ### Resposta local a eventos
 
 Um exemplo importante dessa autonomia é a detecção de variações rápidas
@@ -1101,6 +1230,7 @@ interface gráfica.
 
 ---
 
+<a id="interacao-local-com-o-operador"></a>
 ### Interação local com o operador
 
 A segunda arquitetura introduziu também uma interface homem-máquina
@@ -1109,6 +1239,7 @@ local utilizando os recursos do Multi Function Shield.
 Essa interface permite que o operador consulte informações e altere
 parâmetros sem utilizar o computador.
 
+<a id="botao-s1"></a>
 #### Botão S1
 
 O botão S1 é utilizado para navegar entre as informações apresentadas
@@ -1146,6 +1277,7 @@ ser confundidas.
 
 ---
 
+<a id="botao-s2-e-modo-de-configuracao"></a>
 ### Botão S2 e modo de configuração
 
 O botão S2 é utilizado para acessar o modo de configuração do limiar de
@@ -1192,6 +1324,7 @@ selecionada anteriormente.
 
 ---
 
+<a id="ajuste-de-sensibilidade-pelo-trimpot"></a>
 ### Ajuste de sensibilidade pelo trimpot
 
 O trimpot do Multi Function Shield foi incorporado à interface do
@@ -1241,6 +1374,7 @@ programado.
 
 ---
 
+<a id="feedback-visual-e-sonoro"></a>
 ### Feedback visual e sonoro
 
 A interface local utiliza diferentes recursos para transmitir
@@ -1274,6 +1408,7 @@ permitir operação local do nó de borda.
 
 ---
 
+<a id="supervisao-no-computador"></a>
 ### Supervisão no computador
 
 Embora o Arduino tenha adquirido maior autonomia, o computador continua
@@ -1315,6 +1450,7 @@ um registro visual do instante em que a ocorrência foi detectada.
 
 ---
 
+<a id="persistencia-das-informacoes"></a>
 ### Persistência das informações
 
 Na segunda arquitetura, os dados recebidos pelo computador também são
@@ -1344,6 +1480,7 @@ mas também um histórico das decisões tomadas pelo nó de borda.
 
 ---
 
+<a id="sincronizacao-entre-a-borda-e-o-supervisorio"></a>
 ### Sincronização entre a borda e o supervisório
 
 Durante o desenvolvimento foi identificado um atraso progressivo entre
@@ -1404,6 +1541,7 @@ praticamente sincronizada.
 
 ---
 
+<a id="comparacao-resumida"></a>
 ### Comparação resumida
 
 | Característica | Parte 1 — Processamento centralizado | Parte 2 — Edge Computing |
@@ -1435,6 +1573,7 @@ praticamente sincronizada.
 
 ---
 
+<a id="sintese-da-evolucao"></a>
 ### Síntese da evolução
 
 A arquitetura da primeira etapa pode ser resumida por:
@@ -1498,384 +1637,69 @@ O computador continua sendo importante, porém passa a exercer
 principalmente o papel de supervisório, visualização histórica e
 persistência das informações produzidas pelo dispositivo de borda.
 
+<a id="31-parametros-operacionais-e-reprodutibilidade"></a>
+## 31. Parâmetros operacionais e reprodutibilidade
 
+Para facilitar a reprodução do experimento e a comparação entre diferentes sessões de aquisição, os principais parâmetros atualmente utilizados são:
 
-## 30. Comparação das duas arquiteturas
+| Parâmetro | Valor / configuração |
+|---|---|
+| **Sensor** | DS18B20 |
+| **Plataforma de borda** | Arduino Uno + Multi Function Shield |
+| **Pino do DS18B20** | A4 |
+| **Trimpot de sensibilidade** | A0 |
+| **Comunicação serial** | 9600 baud |
+| **Intervalo aproximado entre leituras** | 1 segundo |
+| **Janela exibida no gráfico** | 60 minutos |
+| **Média móvel** | 30 minutos |
+| **Tendência térmica** | aproximadamente 5 minutos |
+| **Faixa do limiar de evento rápido** | aproximadamente 0,10 °C a 1,00 °C |
+| **Seleção local do display** | S1: `TEMP → MEDIA30 → TREND5` |
+| **Entrada/saída do ajuste de sensibilidade** | S2 com pressionamento longo |
+| **Sinalização de subida rápida** | 1 bip |
+| **Sinalização de queda rápida** | 2 bips |
+| **Persistência** | um arquivo CSV por sessão |
 
-O experimento foi desenvolvido em duas etapas principais, permitindo
-observar na prática a diferença entre uma arquitetura de aquisição com
-**processamento centralizado** e uma arquitetura baseada em
-**computação de borda**.
+<a id="sequencia-operacional-resumida"></a>
+### Sequência operacional resumida
 
-Embora o hardware de aquisição permaneça essencialmente o mesmo, a
-principal diferença entre as duas etapas está no local em que os dados
-são processados e transformados em informação.
-
-### Parte 1 — Processamento centralizado
-
-Na primeira etapa do experimento, o Arduino Uno desempenhava
-principalmente a função de dispositivo de aquisição.
-
-O sensor DS18B20 realizava a medição da temperatura e o Arduino
-transmitia os valores obtidos através da comunicação serial para o
-computador.
-
-A arquitetura podia ser representada da seguinte forma:
+Uma sessão típica pode ser executada da seguinte forma:
 
 ```text
-DS18B20
-   |
-   | temperatura medida
-   v
-Arduino Uno
-   |
-   | dados de temperatura
-   | USB / Serial
-   v
-Computador / Python
-   |
-   +-- média móvel de 30 minutos
-   +-- média total
-   +-- temperatura máxima
-   +-- temperatura mínima
-   +-- amplitude térmica
-   +-- análise de tendência
-   +-- classificação do comportamento
-   +-- visualização gráfica
-   +-- armazenamento dos dados
-```
-Nessa arquitetura, o Arduino tinha pouca participação na interpretação
-dos dados. Sua principal responsabilidade era adquirir a temperatura e
-transmiti-la.
-
-O computador recebia as amostras e realizava praticamente todo o
-processamento necessário para produzir informações de nível mais alto.
-
-Por exemplo, uma medição como Temperatura: 29.8 °C era apenas um dado bruto enviado pelo Arduino.
-Somente depois de chegar ao computador esse dado era combinado com as
-demais amostras para produzir informações como:
-
-Média de 30 minutos
-Média total
-Máxima
-Mínima
-Amplitude
-Tendência térmica
-Estado da tendência
-
-Assim, a interpretação do comportamento térmico dependia diretamente
-da aplicação Python.
-
-Caso o computador fosse desconectado, o Arduino ainda poderia realizar
-a leitura da temperatura, porém grande parte da capacidade de análise
-do sistema deixaria de estar disponível.
-
-Essa característica representa uma arquitetura predominantemente
-centralizada:
-
-```
-AQUISIÇÃO                     PROCESSAMENTO
-
-Sensor                          Computador
-  |                                 ^
-  v                                 |
-Arduino ----------------------------+
-            dados brutos
-```
-fluxo de informação da Parte 1 pode ser resumido por:
-
-```
-MEDIR
-  |
-  v
-TRANSMITIR
-  |
-  v
-PROCESSAR NO COMPUTADOR
-  |
-  v
-INTERPRETAR
-  |
-  v
-VISUALIZAR
-```
-### Parte 2 — Processamento na borda
-
-Na segunda etapa, a arquitetura foi modificada de forma significativa.
-O Arduino deixou de atuar apenas como dispositivo de aquisição e passou
-a executar localmente uma parte relevante do processamento, da análise
-e da tomada de decisão.
-A nova arquitetura pode ser representada da seguinte forma:
-
-```
-DS18B20
-   |
-   | temperatura
-   v
-Arduino Uno / Nó de Borda
-   |
-   +-- aquisição
-   +-- média móvel de 30 minutos
-   +-- média total
-   +-- máxima
-   +-- mínima
-   +-- amplitude
-   +-- tendência de 5 minutos
-   +-- cálculo do Delta
-   +-- cálculo da variação rápida
-   +-- classificação da tendência
-   +-- detecção de eventos
-   +-- determinação do estado térmico
-   +-- ajuste local de sensibilidade
-   +-- interface com o operador
-   +-- alerta sonoro
-   |
-   | informação já processada
-   | USB / Serial
-   v
-Computador / Python
-   |
-   +-- supervisão
-   +-- visualização gráfica
-   +-- histórico de eventos
-   +-- registro em CSV
-```
-
-A principal diferença está no conteúdo transmitido pelo Arduino.
-Na Parte 1, o computador recebia essencialmente a temperatura e precisava
-interpretá-la.
-Na Parte 2, o Arduino transmite não apenas a temperatura medida, mas
-também diversos indicadores calculados localmente.
-Uma mensagem serial pode conter, por exemplo:
-
-```
-TEMP:30.2,
-MEDIA30:29.87,
-MEDIATOTAL:29.74,
-MAX:31.1,
-MIN:28.9,
-AMPL:2.2,
-TREND5:0.083,
-ESTADO_TREND:SUBINDO,
-DELTA:0.06,
-RAPIDA:2.14,
-EVENTO:NORMAL,
-ESTADO_TERMICO:AQUECIMENTO,
-LIMIAR:0.25
-```
-Portanto, o computador já recebe não apenas o valor medido pelo sensor,
-mas também informações derivadas e classificações produzidas
-localmente.
-A transformação realizada na borda pode ser representada por:
-
-```
-DADO
- |
- | 30.2 °C
- v
-PROCESSAMENTO LOCAL
- |
- +--> média
- +--> tendência
- +--> Delta
- +--> variação rápida
- +--> evento
- +--> estado térmico
- |
- v
-INFORMAÇÃO
-
-```
-Essa mudança representa um dos princípios fundamentais da computação de
-borda: aproximar o processamento da origem dos dados.
-
-### Mudança do papel do computador
-
-Outra consequência importante da segunda arquitetura é a mudança do
-papel da aplicação Python.
-
-Na Parte 1:
-
-```
-Python =
-processamento
-+ análise
-+ visualização
-+ armazenamento
-```
-Na Parte 2:
-
-```
-Python =
-supervisão
-+ visualização
-+ armazenamento
-```
-Grande parte da inteligência necessária para interpretar o fenômeno
-térmico passa a estar no próprio dispositivo de borda.
-O gráfico Python, portanto, deixa de ser o elemento responsável por
-decidir se a temperatura está subindo rapidamente, se existe uma
-tendência de aquecimento ou se ocorreu um evento relevante.
-Essas decisões já foram tomadas pelo Arduino.
-O Python passa a apresentar ao operador os resultados dessas decisões e
-a manter o histórico de funcionamento do sistema.
-
-### Processamento em diferentes escalas de tempo
-
-A segunda arquitetura também passou a trabalhar com diferentes escalas
-temporais de análise.
-
-```
-Leitura instantânea
+1. Energizar ou reiniciar o Arduino
        |
-       v
-Delta entre amostras
+       +--> leitura inicial do trimpot
+       +--> definição do limiar inicial
+       +--> início da aquisição
+
+2. Selecionar a informação local com S1
        |
-       v
-Detecção de evento rápido
+       +--> TEMP
+       +--> MEDIA30
+       +--> TREND5
+
+3. Se necessário, manter S2 pressionado
+       |
+       +--> entrar no modo de ajuste
+       +--> 4 LEDs piscando
+       +--> display mostra o limiar
+       +--> girar o trimpot
+       +--> manter S2 pressionado novamente para sair
+
+4. Executar o supervisório Python
+       |
+       +--> receber telemetria
+       +--> atualizar gráfico
+       +--> registrar eventos
+       +--> gravar CSV
 ```
-Paralelamente:
 
-```
-Amostras
-   |
-   v
-Agregação temporal
-   |
-   v
-Tendência de aproximadamente 5 minutos
-   |
-   v
-Classificação térmica
-```
-E, em uma escala ainda maior:
-```
-Amostras
-   |
-   v
-Agregações de 1 minuto
-   |
-   v
-Janela móvel de 30 minutos
-   |
-   v
-Média móvel
-```
-Dessa maneira, o nó de borda consegue observar tanto alterações rápidas
-quanto comportamentos térmicos mais lentos.
+Essa parametrização explícita é importante para que futuras alterações de firmware, sensores ou meios de comunicação possam ser comparadas com a configuração de referência utilizada nesta fase do experimento.
 
-### Autonomia local
+---
 
-Uma consequência especialmente importante da migração do processamento
-é o aumento da autonomia do sistema.
-Na arquitetura centralizada, diversas informações somente estavam
-disponíveis enquanto o computador executava o programa Python.
-Na arquitetura de borda, o Arduino consegue continuar adquirindo,
-processando e interpretando os dados localmente mesmo sem a aplicação
-de supervisão.
-O nó de borda possui:
-
-```
-Sensor
-  +
-Processamento
-  +
-Display
-  +
-LEDs
-  +
-Teclado
-  +
-Trimpot
-  +
-Buzzer
-```
-Isso permite que o sistema execute localmente a seguinte sequência:
-
-```
-MEDIR
-  |
-  v
-PROCESSAR
-  |
-  v
-INTERPRETAR
-  |
-  v
-CLASSIFICAR
-  |
-  v
-DETECTAR EVENTOS
-  |
-  v
-ALERTAR
-  |
-  v
-INTERAGIR COM O OPERADOR
-```
-O computador deixa, portanto, de ser indispensável para várias das
-funções básicas de análise e operação.
-
-### Resposta local a eventos
-
-Um exemplo importante dessa autonomia é a detecção de variações rápidas
-de temperatura.
-Quando o Arduino identifica uma alteração que ultrapassa o limiar
-configurado, a decisão é tomada localmente.
-Uma subida rápida pode produzir:
-
-```
-SUBIDA_RAPIDA
-      |
-      +--> classificação local
-      |
-      +--> 1 bip no buzzer
-      |
-      +--> transmissão do evento
-      |
-      +--> marcador no gráfico Python
-      |
-      +--> registro no CSV
-```
-Da mesma forma:
-
-```
-QUEDA_RAPIDA
-      |
-      +--> classificação local
-      |
-      +--> 2 bips no buzzer
-      |
-      +--> transmissão do evento
-      |
-      +--> marcador no gráfico Python
-      |
-      +--> registro no CSV
-```
-O alerta sonoro ocorre diretamente no dispositivo de borda.
-
-Isso significa que a resposta ao evento não depende do tempo necessário
-para transmitir os dados, processá-los no computador e atualizar a
-interface gráfica.
-
-### Interação local com o operador
-
-A segunda arquitetura introduziu também uma interface homem-máquina
-local utilizando os recursos do Multi Function Shield.
-
-Essa interface permite que o operador consulte informações e altere
-parâmetros sem utilizar o computador.
-
-Botão S1
-
-O botão S1 é utilizado para navegar entre as informações apresentadas
-no display.
-
-Cada toque curto altera a variável exibida:
-
-
-
-## 31. Próximas etapas
+<a id="32-proximas-etapas"></a>
+## 32. Próximas etapas
 
 As próximas evoluções possíveis incluem:
 
@@ -1914,7 +1738,8 @@ Rede
 
 ---
 
-## 32. Objetivo acadêmico
+<a id="33-objetivo-academico"></a>
+## 33. Objetivo acadêmico
 
 O experimento busca demonstrar de forma prática e incremental a evolução de um sistema tradicional de aquisição de dados para uma arquitetura baseada em **Computação de Borda**.
 
@@ -1924,6 +1749,7 @@ A Parte 2 é especialmente relevante porque demonstra que o nó de borda pode n�
 
 ---
 
+<a id="autor"></a>
 ## Autor
 
 **Charles Cavalcante Alcarde**
