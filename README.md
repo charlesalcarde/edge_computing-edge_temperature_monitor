@@ -547,6 +547,26 @@ O painel gráfico apresenta:
 
 A legenda e o painel lateral permitem separar claramente dados instantâneos, indicadores calculados e estados produzidos pelo sistema de borda.
 
+### Visualização do sistema na segunda etapa
+
+A figura a seguir apresenta o supervisório Python após a migração do
+processamento para o Arduino.
+
+<p align="center">
+  <img src="docs/images/monitoramento-edge.png"
+       alt="Supervisório Python do sistema de monitoramento em Edge Computing"
+       width="900">
+</p>
+
+<p align="center">
+  <em>
+  Figura 2 — Supervisório do sistema de Edge Computing, apresentando
+  temperatura instantânea, média móvel de 30 minutos, parâmetros
+  calculados pelo Arduino, limiar configurável de detecção e indicação
+  temporal de eventos rápidos.
+  </em>
+</p>
+
 ---
 
 ## 26. Registro histórico dos eventos no gráfico
